@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+    "time"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -99,7 +100,8 @@ func NewExporter(uri string) *Exporter {
 			[]string{"state"},
 		),
 		client: &http.Client{
-			Transport: &http.Transport{
+            Timeout: time.Duration(5 * time.Second),
+			Transport: &http.Transport {
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: *insecure},
 			},
 		},
@@ -165,12 +167,7 @@ func (e *Exporter) updateScoreboard(scoreboard string) {
 }
 
 func (e *Exporter) collect(ch chan<- prometheus.Metric) error {
-	
-    timeout := time.Duration(5 * time.Second)
-    client := e.client{
-        Timeout: timeout,
-    }
-    resp, err := client.Get(e.URI)
+	resp, err := e.client.Get(e.URI)
 	if err != nil {
 		ch <- prometheus.MustNewConstMetric(e.up, prometheus.GaugeValue, 0)
 		return fmt.Errorf("Error scraping apache: %v", err)
