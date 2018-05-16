@@ -165,7 +165,12 @@ func (e *Exporter) updateScoreboard(scoreboard string) {
 }
 
 func (e *Exporter) collect(ch chan<- prometheus.Metric) error {
-	resp, err := e.client.Get(e.URI)
+	
+    timeout := time.Duration(5 * time.Second)
+    client := e.client{
+        Timeout: timeout,
+    }
+    resp, err := client.Get(e.URI)
 	if err != nil {
 		ch <- prometheus.MustNewConstMetric(e.up, prometheus.GaugeValue, 0)
 		return fmt.Errorf("Error scraping apache: %v", err)
